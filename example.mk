@@ -9,3 +9,21 @@ core-td.json:
 	download_dataset.py --output $@						\
 	--dataset "OpenFF multiplicity correction torsion drive data v1.1"	\
 	--type td
+
+init := initial.offxml
+
+# select optimization parameters to optimize
+opt-smirks.json: core-opt.json $(init)
+	select_parameters.py opt \
+	--dataset $<		\
+	--forcefield $(init)	\
+	--output-smirks $@
+
+# select torsiondrive parameters to optimize
+td-smirks.json: core-td.json $(init)
+	select_parameters.py td \
+	--dataset $<		\
+	--forcefield $(init)	\
+	--output-smirks $@	\
+	--ring-torsions explicit_ring_torsions.dat
+
