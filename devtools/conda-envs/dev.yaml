@@ -4,3 +4,9 @@ channels:
 dependencies:
   - python
   - pip
+
+# openff stuff
+  - openff-toolkit
+
+# utilities
+  - click
