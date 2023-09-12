@@ -1,0 +1,6 @@
+name: vflib
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
