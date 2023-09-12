@@ -27,3 +27,10 @@ td-smirks.json: core-td.json $(init)
 	--output-smirks $@	\
 	--ring-torsions explicit_ring_torsions.dat
 
+# initialize force field with the modified seminario method
+msm.offxml: core-opt.json $(init)
+	create_msm.py                        \
+	--initial-force-field $(init)           \
+	--optimization-dataset $<		\
+	--working-directory working-directory   \
+	--output $@

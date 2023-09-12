@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import click
 from openff.qcsubmit.results import (
     OptimizationResultCollection,
