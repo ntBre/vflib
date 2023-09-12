@@ -40,7 +40,7 @@ msm.offxml: core-opt.json $(init)
 fb-deps := smiles-to-exclude.dat smarts-to-exclude.dat core-opt.json	\
 core-td.json opt-smirks.json td-smirks.json msm.offxml
 
-fb-ready: $(fb-deps)
+fb-ready fb-fit/optimize.in fb-fit/forcefield/force-field.offxml: $(fb-deps)
 	rm -r fb-fit/targets
 	mkdir -p fb-fit/targets
 	create_fb_inputs.py                                     \
