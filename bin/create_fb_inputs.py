@@ -4,6 +4,7 @@ import pathlib
 import typing
 
 import click
+from tqdm import tqdm
 
 
 def load_training_data(
@@ -149,6 +150,7 @@ def load_training_data(
     show_default=True,
     help="The port to run the server on.",
 )
+@click.option("--allow-warnings", default=False, is_flag=True)
 def generate(
     tag: str,
     optimization_dataset: str,
@@ -162,6 +164,7 @@ def generate(
     verbose: bool = False,
     max_iterations: int = 50,
     port: int = 55387,
+    allow_warnings=False,
 ):
     from openff.bespokefit.optimizers.forcebalance import (
         ForceBalanceInputFactory,
@@ -186,6 +189,16 @@ def generate(
     )
     from openff.toolkit import ForceField
 
+    # do this first in case something disastrous happens - version mismatches,
+    # for example, which I'm dealing with currently
+    ff = ForceField(forcefield, allow_cosmetic_attributes=True)
+    print("finished loading ff")
+
+    if not allow_warnings:
+        import logging
+
+        logging.getLogger("openff").setLevel(logging.ERROR)
+
     torsion_training_set, optimization_training_set = load_training_data(
         optimization_dataset=optimization_dataset,
         torsion_dataset=torsion_dataset,
@@ -193,6 +206,9 @@ def generate(
         smiles_to_exclude=smiles_to_exclude,
         verbose=verbose,
     )
+
+    if verbose:
+        print("finished loading training data")
 
     optimizer = ForceBalanceSchema(
         max_iterations=max_iterations,
@@ -211,6 +227,14 @@ def generate(
         },
     )
 
+    if verbose:
+        print("finished initializing ForceBalance schema")
+
+    # these call to_records again omfg. that's a bare minimum of 3 calls:
+    # 1. get_parameter_distribution calls it explicitly to select_parameters
+    # 2. create_msm.py calls it explicitly
+    # 3. these call it very deep in the code
+    # additionally, if you call ResultRecordGroupFilter, that calls it too
     targets = [
         TorsionProfileTargetSchema(
             reference_data=torsion_training_set,
@@ -229,6 +253,9 @@ def generate(
         ),
     ]
 
+    if verbose:
+        print("finished initializing target schemas")
+
     # a16, a17, a27, a35
     linear_angle_smirks = [
         "[*:1]~[#6X2:2]~[*:3]",  # a16
@@ -243,23 +270,24 @@ def generate(
         torsion_smirks = json.load(f)
 
     target_parameters = []
-    for smirks in valence_smirks["Angles"]:
+    for smirks in tqdm(valence_smirks["Angles"], desc="Processing angles"):
         if smirks in linear_angle_smirks:
             parameter = AngleSMIRKS(smirks=smirks, attributes={"k"})
         else:
             parameter = AngleSMIRKS(smirks=smirks, attributes={"k", "angle"})
         target_parameters.append(parameter)
 
-    for smirks in valence_smirks["Bonds"]:
+    for smirks in tqdm(valence_smirks["Bonds"], desc="Processing bonds"):
         target_parameters.append(
             BondSMIRKS(smirks=smirks, attributes={"k", "length"})
         )
 
-    ff = ForceField(forcefield, allow_cosmetic_attributes=True)
     ff.deregister_parameter_handler("Constraints")
 
     torsion_handler = ff.get_parameter_handler("ProperTorsions")
-    for smirks in torsion_smirks["ProperTorsions"]:
+    for smirks in tqdm(
+        torsion_smirks["ProperTorsions"], desc="Processing torsions"
+    ):
         if smirks in torsion_handler.parameters:
             original_k = torsion_handler.parameters[smirks].k
             attributes = {f"k{i + 1}" for i in range(len(original_k))}
