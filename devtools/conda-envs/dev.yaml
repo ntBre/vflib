@@ -7,6 +7,17 @@ dependencies:
 
 # openff stuff
   - openff-toolkit
+  - openff-qcsubmit
+  - openff-units
+  - openff-bespokefit
+
+# misc chemistry
+  - qubekit
+
+# qcarchive
+  - qcportal
 
 # utilities
   - click
+  - tqdm
+  - numpy
