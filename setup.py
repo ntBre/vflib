@@ -5,5 +5,6 @@ setup(
         "bin/download_dataset.py",
         "bin/select_parameters.py",
         "bin/create_msm.py",
+        "bin/create_fb_inputs.py",
     ],
 )
