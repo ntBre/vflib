@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Literal, Union
 
 from openff.qcsubmit.results import (
     OptimizationResultCollection,
@@ -35,20 +35,25 @@ OptimizationResultCollection.to_molecules = to_molecules
 
 def load_dataset(
     dataset: str,
+    type_: Literal["torsion", "optimization"] = None,
 ) -> Union[OptimizationResultCollection, TorsionDriveResultCollection]:
-    """Peeks at the first entry of `dataset` to determine its type and
-    then loads it appropriately.
+    """Peeks at the first entry of `dataset` to determine its type and then
+    loads it appropriately. If `type_` is passed, use that as the type instead.
 
     Raises a `TypeError` if the first entry is neither a `torsion`
     record nor an `optimization` record.
+
     """
-    with open(dataset, "r") as f:
-        j = json.load(f)
-    entries = j["entries"]
-    keys = entries.keys()
-    assert len(keys) == 1  # only handling this case for now
-    key = list(keys)[0]
-    match j["entries"][key][0]["type"]:
+    if type_ is None:
+        with open(dataset, "r") as f:
+            j = json.load(f)
+        entries = j["entries"]
+        keys = entries.keys()
+        assert len(keys) == 1  # only handling this case for now
+        key = list(keys)[0]
+        type_ = j["entries"][key][0]["type"]
+
+    match type_:
         case "torsion":
             return TorsionDriveResultCollection.parse_file(dataset)
         case "optimization":
