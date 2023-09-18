@@ -21,6 +21,7 @@ os.chmod(example, st.st_mode | stat.S_IEXEC)
 
 setup(
     scripts=[
+        "bin/check_coverage.py",
         "bin/create_fb_inputs.py",
         "bin/create_msm.py",
         "bin/download_dataset.py",
