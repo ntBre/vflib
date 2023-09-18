@@ -4,8 +4,8 @@ from enum import Enum
 from openff.toolkit import ForceField
 from tqdm import tqdm
 
-from vflib.utils import Timer
 from vflib import load_dataset
+from vflib.utils import Timer
 
 
 class ParameterType(Enum):
@@ -62,3 +62,37 @@ def check_coverage(forcefield, dataset, parameter_type: ParameterType):
         print(f"{i:5}{id:>7}   {smirk}")
 
     timer.say("finished")
+
+
+def check_record_coverage(forcefield, dataset, parameter_type: ParameterType):
+    """Like `check_coverage` but calls `to_records` instead of `to_molecules`
+    and returns the list of QCArchive record ids that matched each parameter
+
+    """
+    print("checking record coverage with")
+    print(f"forcefield = {forcefield}")
+    print(f"dataset = {dataset}")
+
+    timer = Timer()
+
+    ff = ForceField(forcefield, allow_cosmetic_attributes=True)
+    dataset = load_dataset(dataset)
+
+    timer.say("finished loading collection")
+
+    records_and_molecules = dataset.to_records()
+
+    timer.say("finished to_records")
+
+    results = defaultdict(list)
+    for record, molecule in tqdm(
+        records_and_molecules, desc="Counting results"
+    ):
+        all_labels = ff.label_molecules(molecule.to_topology())[0]
+        labels = all_labels[parameter_type.value]
+        for label in labels.values():
+            results[label.id].append(record.id)
+
+    timer.say("finished")
+
+    return results
