@@ -1,5 +1,9 @@
+import logging
+
 import click
 from vflib.coverage import ParameterType, check_coverage
+
+logging.getLogger("openff").setLevel(logging.ERROR)
 
 
 @click.command()
