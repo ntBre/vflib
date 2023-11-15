@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import logging
 
 import click
 import numpy as np
@@ -10,6 +11,8 @@ from openff.qcsubmit.results import (
 )
 from openff.toolkit.typing.engines.smirnoff.forcefield import ForceField
 from vflib.curate import select_parameters
+
+logging.getLogger("openff").setLevel(logging.ERROR)
 
 
 @click.group()
